@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Keyboard, BookOpen, GraduationCap, Users, RefreshCw, Award, ShieldAlert, LogOut, User as UserIcon
+  Keyboard, BookOpen, GraduationCap, Users, RefreshCw, Award, ShieldAlert, LogOut, User as UserIcon, Info
 } from 'lucide-react';
 import { Lesson, Attempt } from './types';
 import { INITIAL_LESSONS, INITIAL_ATTEMPTS } from './data';
@@ -8,9 +8,15 @@ import { AuthProvider, useAuth } from './firebase/AuthContext';
 import StudentModule from './components/StudentModule';
 import TeacherModule from './components/TeacherModule';
 import LoginPage from './components/LoginPage';
+import LandingPage from './components/LandingPage';
+import AboutPage from './components/AboutPage';
+
+const TEACHER_EMAIL = 'rgelabertf@gmail.com';
 
 function AppContent() {
   const { user, loading, logout } = useAuth();
+  const [appPhase, setAppPhase] = useState<'landing' | 'about' | 'auth'>('landing');
+  const [showInfoOverlay, setShowInfoOverlay] = useState(false);
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [lessons, setLessons] = useState<Lesson[]>(INITIAL_LESSONS);
   const [attempts, setAttempts] = useState<Attempt[]>(INITIAL_ATTEMPTS);
@@ -27,6 +33,29 @@ function AppContent() {
     setAttempts(prev => prev.filter(a => a.id !== attemptId));
   };
 
+  const handleRoleToggle = (newRole: 'student' | 'teacher') => {
+    if (newRole === 'teacher' && user?.email !== TEACHER_EMAIL) {
+      alert('El acceso al Portal del Docente está restringido. Contacta al administrador.');
+      return;
+    }
+    setRole(newRole);
+  };
+
+  // --- PUBLIC PHASES ---
+  if (appPhase === 'landing') {
+    return <LandingPage onGetStarted={() => setAppPhase('auth')} onExploreActivities={() => setAppPhase('about')} />;
+  }
+
+  if (appPhase === 'about' && !user) {
+    return <AboutPage onBack={() => setAppPhase('landing')} />;
+  }
+
+  // --- INFO OVERLAY (authenticated) ---
+  if (showInfoOverlay && user) {
+    return <AboutPage onBack={() => setShowInfoOverlay(false)} />;
+  }
+
+  // --- AUTH FLOW ---
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -36,7 +65,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LoginPage />;
+    return <LoginPage onBackToLanding={() => setAppPhase('landing')} />;
   }
 
   return (
@@ -60,16 +89,25 @@ function AppContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Info button */}
+            <button
+              onClick={() => setShowInfoOverlay(true)}
+              className="flex items-center gap-1.5 py-1.5 px-3 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+              title="Guía de actividades"
+            >
+              <Info className="w-4 h-4" /> Guía
+            </button>
+
             {/* Core high-level Student/Teacher Portal navigation toggle switch */}
             <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
               <button
-                onClick={() => setRole('student')}
+                onClick={() => handleRoleToggle('student')}
                 className={`flex items-center gap-1.5 py-1.5 px-4 text-xs font-black rounded-lg transition-all ${role === 'student' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 <GraduationCap className="w-4 h-4" /> Centro de Estudiantes
               </button>
               <button
-                onClick={() => setRole('teacher')}
+                onClick={() => handleRoleToggle('teacher')}
                 className={`flex items-center gap-1.5 py-1.5 px-4 text-xs font-black rounded-lg transition-all ${role === 'teacher' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 <Users className="w-4 h-4" /> Portal del Docente
@@ -117,8 +155,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
           <span>© 2026 DactiloTICs — Rolando Gelabert Fernández</span>
           <div className="flex gap-4">
-            <span className="hover:text-indigo-400 transition-colors cursor-help">Ayuda Ergonomía</span>
-            <span className="hover:text-indigo-400 transition-colors cursor-help">Términos del Servicio</span>
+            <button onClick={() => setShowInfoOverlay(true)} className="hover:text-indigo-400 transition-colors cursor-pointer">Acerca de</button>
             <span className="hover:text-indigo-400 transition-colors cursor-help">Licencia MIT</span>
           </div>
         </div>

@@ -31,7 +31,7 @@ export interface KeystrokeEvent {
 export interface Attempt {
   id: string;
   studentName: string;
-  studentGrade: 4 | 5 | 6 | number;
+  studentGrade?: number;
   lessonId: string;
   lessonTitle: string;
   grossWpm: number;

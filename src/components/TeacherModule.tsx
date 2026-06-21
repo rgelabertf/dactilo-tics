@@ -326,7 +326,7 @@ export default function TeacherModule({
             <p className="text-xs text-slate-400 mb-4 leading-normal">Selecciona un registro para ver la reproducción molecular exacta de sus pulsaciones rítmicas.</p>
             
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {filteredAttempts.map(a => (
+              {attempts.map(a => (
                 <div 
                   key={a.id}
                   onClick={() => setSelectedAttemptToReplay(a)}
