@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Keyboard, Mail, Lock, User, AlertCircle, Loader } from 'lucide-react';
+import { Keyboard, Mail, Lock, User, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../firebase/AuthContext';
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onBackToLanding?: () => void;
+}
+
+export default function LoginPage({ onBackToLanding }: LoginPageProps) {
   const { login, register, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -60,6 +64,12 @@ export default function LoginPage() {
             <h1 className="text-2xl font-black text-white">DactiloTICs</h1>
             <p className="text-slate-400 text-sm mt-1">Maestría Motriz Táctil de Precisión</p>
           </div>
+
+          {onBackToLanding && (
+            <button onClick={onBackToLanding} className="flex items-center gap-1 text-xs text-slate-500 hover:text-indigo-400 transition-colors mb-4 font-bold">
+              <ArrowLeft className="w-3.5 h-3.5" /> Volver a inicio
+            </button>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (

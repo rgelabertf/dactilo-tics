@@ -150,8 +150,6 @@ export const INITIAL_ATTEMPTS: Attempt[] = [
     id: 'att-1',
     studentName: 'Mateo Fernández',
     studentGrade: 4,
-    schoolId: 'sch-1',
-    classId: 'cls-1',
     lessonId: 'key-1',
     lessonTitle: 'Fila Guía Básica (F, J, D, K)',
     grossWpm: 28,
