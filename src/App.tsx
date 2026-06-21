@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Keyboard, BookOpen, GraduationCap, Users, RefreshCw, Layers, Award, ShieldAlert 
+  Keyboard, BookOpen, GraduationCap, Users, RefreshCw, Award, ShieldAlert 
 } from 'lucide-react';
-import { Lesson, Attempt, District, School, ClassGroup } from './types';
-import { 
-  INITIAL_LESSONS, INITIAL_ATTEMPTS, 
-  INITIAL_DISTRICTS, INITIAL_SCHOOLS, INITIAL_CLASSES 
-} from './data';
+import { Lesson, Attempt } from './types';
+import { INITIAL_LESSONS, INITIAL_ATTEMPTS } from './data';
 import StudentModule from './components/StudentModule';
 import TeacherModule from './components/TeacherModule';
 
@@ -14,11 +11,6 @@ export default function App() {
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [lessons, setLessons] = useState<Lesson[]>(INITIAL_LESSONS);
   const [attempts, setAttempts] = useState<Attempt[]>(INITIAL_ATTEMPTS);
-  
-  // Data lists (read-only for student, used as filters in teacher module)
-  const districts = INITIAL_DISTRICTS;
-  const schools = INITIAL_SCHOOLS;
-  const classes = INITIAL_CLASSES;
 
   const handleNewAttempt = (attempt: Attempt) => {
     setAttempts(prev => [attempt, ...prev]);
@@ -84,9 +76,6 @@ export default function App() {
           <TeacherModule
             lessons={lessons}
             attempts={attempts}
-            districts={districts}
-            schools={schools}
-            classes={classes}
             onAddCustomLesson={handleAddCustomLesson}
             onDeleteAttempt={handleDeleteAttempt}
           />

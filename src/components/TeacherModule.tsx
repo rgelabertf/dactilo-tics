@@ -3,14 +3,11 @@ import {
   Users, Award, Settings, CheckCircle, Trash2, Calendar, ShieldAlert,
   Play, Pause, FastForward, FileText, Download, Plus, CheckSquare, RefreshCw
 } from 'lucide-react';
-import { Attempt, Lesson, District, School, ClassGroup } from '../types';
+import { Attempt, Lesson } from '../types';
 
 interface TeacherModuleProps {
   lessons: Lesson[];
   attempts: Attempt[];
-  districts: District[];
-  schools: School[];
-  classes: ClassGroup[];
   onAddCustomLesson: (lesson: Lesson) => void;
   onDeleteAttempt: (id: string) => void;
 }
@@ -18,16 +15,9 @@ interface TeacherModuleProps {
 export default function TeacherModule({
   lessons,
   attempts,
-  districts,
-  schools,
-  classes,
   onAddCustomLesson,
   onDeleteAttempt
 }: TeacherModuleProps) {
-  // Filters
-  const [selectedDistrict, setSelectedDistrict] = useState('all');
-  const [selectedSchool, setSelectedSchool] = useState('all');
-  const [selectedClass, setSelectedClass] = useState('all');
   
   // Tab controller
   const [activeSubTab, setActiveSubTab] = useState<'roster' | 'replays' | 'lessons-editor' | 'exports'>('roster');
@@ -157,14 +147,6 @@ export default function TeacherModule({
     return { status: 'BAJO META', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' };
   };
 
-  // Filtered lists
-  const filteredAttempts = attempts.filter(a => {
-    const matchClass = selectedClass === 'all' || a.classId === selectedClass;
-    const matchSchool = selectedSchool === 'all' || a.schoolId === selectedSchool;
-    // We assume school corresponds correctly
-    return matchClass && matchSchool;
-  });
-
   // Unique students analytics calculation
   const uniqueStudentMap: Record<string, {
     name: string;
@@ -172,8 +154,6 @@ export default function TeacherModule({
     attempts: number;
     avgSpeed: number;
     avgAccuracy: number;
-    classId: string;
-    schoolId: string;
   }> = {};
 
   attempts.forEach(a => {
@@ -183,9 +163,7 @@ export default function TeacherModule({
         grade: a.studentGrade,
         attempts: 0,
         avgSpeed: 0,
-        avgAccuracy: 0,
-        classId: a.classId,
-        schoolId: a.schoolId
+        avgAccuracy: 0
       };
     }
     const record = uniqueStudentMap[a.studentName];
@@ -199,11 +177,7 @@ export default function TeacherModule({
     std.avgAccuracy = Math.round(std.avgAccuracy / std.attempts);
   });
 
-  const studentsList = Object.values(uniqueStudentMap).filter(s => {
-    const matchClass = selectedClass === 'all' || s.classId === selectedClass;
-    const matchSchool = selectedSchool === 'all' || s.schoolId === selectedSchool;
-    return matchClass && matchSchool;
-  });
+  const studentsList = Object.values(uniqueStudentMap);
 
   // Data Exporters
   const triggerExport = (format: 'csv' | 'xml' | 'html') => {
@@ -272,50 +246,7 @@ export default function TeacherModule({
           </div>
         </div>
 
-        {/* Filters Selectors district, school, class */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-1 font-mono uppercase tracking-wider">Distrito Educativo</label>
-            <select
-              value={selectedDistrict}
-              onChange={e => { setSelectedDistrict(e.target.value); setSelectedSchool('all'); setSelectedClass('all'); }}
-              className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-indigo-500/25 focus:border-indigo-500 focus:outline-none text-white font-mono cursor-pointer"
-            >
-              <option value="all">Ver Todos los Distritos</option>
-              {districts.map(d => (
-                <option key={d.id} value={d.id} className="bg-slate-950 text-white">{d.name}</option>
-              ))}
-            </select>
-          </div>
 
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-1 font-mono uppercase tracking-wider">Escuela / Colegio</label>
-            <select
-              value={selectedSchool}
-              onChange={e => { setSelectedSchool(e.target.value); setSelectedClass('all'); }}
-              className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-indigo-500/25 focus:border-indigo-500 focus:outline-none text-white font-mono cursor-pointer"
-            >
-              <option value="all">Ver Todas las Escuelas</option>
-              {schools.filter(s => selectedDistrict === 'all' || s.districtId === selectedDistrict).map(s => (
-                <option key={s.id} value={s.id} className="bg-slate-950 text-white">{s.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 block mb-1 font-mono uppercase tracking-wider">Clase / Grupo de Grado</label>
-            <select
-              value={selectedClass}
-              onChange={e => setSelectedClass(e.target.value)}
-              className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-indigo-500/25 focus:border-indigo-500 focus:outline-none text-white font-mono cursor-pointer"
-            >
-              <option value="all">Ver Todos los Grupos</option>
-              {classes.filter(c => selectedSchool === 'all' || c.schoolId === selectedSchool).map(c => (
-                <option key={c.id} value={c.id} className="bg-slate-950 text-white">{c.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
       </div>
 
       {/* Sub Tabs */}

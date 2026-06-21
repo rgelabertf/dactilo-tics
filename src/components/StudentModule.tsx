@@ -21,8 +21,6 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
   // Custom states
   const [studentName, setStudentName] = useState('Mateo Fernández');
   const [studentGrade, setStudentGrade] = useState<number>(4);
-  const [schoolId] = useState('sch-1');
-  const [classId] = useState('cls-1');
 
   // Keyboard setup
   const [layout, setLayout] = useState<KeyboardLayout>('QWERTY');
@@ -257,8 +255,6 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
       id: 'att-' + Math.random().toString(36).substr(2, 9),
       studentName,
       studentGrade,
-      schoolId,
-      classId,
       lessonId: activeLesson.id,
       lessonTitle: activeLesson.title,
       grossWpm: finalGrossWpm,

@@ -32,8 +32,6 @@ export interface Attempt {
   id: string;
   studentName: string;
   studentGrade: 4 | 5 | 6 | number;
-  schoolId: string;
-  classId: string;
   lessonId: string;
   lessonTitle: string;
   grossWpm: number;
@@ -44,22 +42,4 @@ export interface Attempt {
   date: string;
   keystrokeReplay: KeystrokeEvent[];
   suspicious: boolean;
-}
-
-export interface ClassGroup {
-  id: string;
-  schoolId: string;
-  name: string;
-  grade: number;
-}
-
-export interface School {
-  id: string;
-  districtId: string;
-  name: string;
-}
-
-export interface District {
-  id: string;
-  name: string;
 }

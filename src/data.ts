@@ -1,21 +1,4 @@
-import { Lesson, Attempt, District, School, ClassGroup } from './types';
-
-export const INITIAL_DISTRICTS: District[] = [
-  { id: 'dist-1', name: 'Distrito Escolar Tecnológico Norte' },
-  { id: 'dist-2', name: 'Distrito Innovación Sur' }
-];
-
-export const INITIAL_SCHOOLS: School[] = [
-  { id: 'sch-1', districtId: 'dist-1', name: 'Colegio de Ciencias de la Computación' },
-  { id: 'sch-2', districtId: 'dist-1', name: 'Academia Digital Ada Lovelace' },
-  { id: 'sch-3', districtId: 'dist-2', name: 'Liceo Tecnológico del Futuro' }
-];
-
-export const INITIAL_CLASSES: ClassGroup[] = [
-  { id: 'cls-1', schoolId: 'sch-1', name: '4° Grado - Sección A (TICs Básicas)', grade: 4 },
-  { id: 'cls-2', schoolId: 'sch-1', name: '5° Grado - Sección B (Redacción y Algoritmos)', grade: 5 },
-  { id: 'cls-3', schoolId: 'sch-2', name: '6° Grado - Sección Única (Ciudadanía Digital)', grade: 6 }
-];
+import { Lesson, Attempt } from './types';
 
 export const INITIAL_LESSONS: Lesson[] = [
   // --- KEY DRILLS ---
@@ -184,8 +167,6 @@ export const INITIAL_ATTEMPTS: Attempt[] = [
     id: 'att-2',
     studentName: 'Sofía Rodríguez',
     studentGrade: 6,
-    schoolId: 'sch-2',
-    classId: 'cls-3',
     lessonId: 'text-2',
     lessonTitle: 'Integridad Académica vs. Plagio',
     grossWpm: 38,
@@ -201,8 +182,6 @@ export const INITIAL_ATTEMPTS: Attempt[] = [
     id: 'att-3',
     studentName: 'Lucas Mendoza',
     studentGrade: 4,
-    schoolId: 'sch-1',
-    classId: 'cls-1',
     lessonId: 'key-1',
     lessonTitle: 'Fila Guía Básica (F, J, D, K)',
     grossWpm: 11,
@@ -218,8 +197,6 @@ export const INITIAL_ATTEMPTS: Attempt[] = [
     id: 'att-cheat',
     studentName: 'Felipe Hack',
     studentGrade: 5,
-    schoolId: 'sch-1',
-    classId: 'cls-2',
     lessonId: 'text-2',
     lessonTitle: 'Integridad Académica vs. Plagio',
     grossWpm: 182,
