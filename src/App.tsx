@@ -11,7 +11,7 @@ import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
 import AboutPage from './components/AboutPage';
 
-const TEACHER_EMAIL = 'rgelabertf@gmail.com';
+const TEACHER_EMAIL = import.meta.env.VITE_TEACHER_EMAIL || 'rgelabertf@gmail.com';
 
 function AppContent() {
   const { user, loading, logout } = useAuth();
