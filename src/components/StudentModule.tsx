@@ -159,18 +159,106 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
     setKeysHistory(prev => [...prev, event]);
     setTypedInput(val);
 
-    // End of Lesson Check
+    // Detect lesson completion inline with correct values
     if (val.length === activeLesson.content.length) {
-      concludeAttempt();
+      const finalElapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+      let correctCount = 0;
+      let wrongCount = 0;
+      for (let i = 0; i < val.length; i++) {
+        if (val[i] === activeLesson.content[i]) correctCount++;
+        else wrongCount++;
+      }
+      const finalKeystrokes = [...keysHistory, event];
+      concludeAttempt(val, finalElapsed, correctCount, wrongCount, finalKeystrokes);
     }
   };
 
-  const concludeAttempt = () => {
+  const TEXT_ALTERNATIVES: Record<string, string[]> = {
+    'text-2': [
+      'Redactar con ideas propias fortalece el pensamiento y la originalidad academica. La mecanografia veloz te permite expresar conceptos complejos sin interrupciones.',
+      'La integridad intelectual es un pilar fundamental en la era digital. Todo contenido extraido de fuentes externas debe ser citado correctamente.',
+      'El analisis critico se desarrolla escribiendo resumenes con vocabulario personal. La tecnologia es una herramienta que amplifica tu capacidad de expresion.'
+    ],
+    'text-3': [
+      'Cada pulsacion en el teclado genera una senal electrica que viaja al procesador central. Los switches mecanicos tienen una vida util de hasta 50 millones de pulsaciones.',
+      'El monitor muestra pixeles que se iluminan en fracciones de segundo. La tarjeta grafica interpreta los datos binarios para crear imagenes en tiempo real.',
+      'Los dispositivos de entrada como el teclado y el raton convierten acciones fisicas en datos digitales que la computadora procesa instantaneamente.'
+    ]
+  };
+
+  const WORD_POOL = [
+    'algoritmo', 'archivo', 'base', 'bit', 'byte', 'chip', 'ciber', 'clave', 'código',
+    'compilar', 'cpu', 'datos', 'debug', 'digital', 'disco', 'dominio', 'enlace', 'firma',
+    'fuente', 'hardware', 'host', 'internet', 'kernel', 'latencia', 'log', 'mail', 'nube',
+    'pixel', 'puerto', 'rama', 'red', 'script', 'servidor', 'shell', 'token', 'virus', 'wifi'
+  ];
+
+  const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+  const generateVariantText = (lesson: Lesson): string => {
+    if (lesson.category === 'key' && lesson.studiedKeys.length > 0) {
+      const keys = lesson.studiedKeys.filter(k => k !== ' ');
+      return Array.from({ length: 20 }, () => {
+        const pair = Array.from({ length: 2 }, () => pickRandom(keys)).join('');
+        return pair;
+      }).join(' ');
+    }
+
+    if (lesson.category === 'word') {
+      const pool = lesson.studiedKeys.length > 0 ? lesson.studiedKeys.filter(k => k !== ' ') : WORD_POOL;
+      return Array.from({ length: 14 }, () => {
+        const wordLen = 3 + Math.floor(Math.random() * 4);
+        return Array.from({ length: wordLen }, () => pickRandom(pool)).join('');
+      }).join(' ');
+    }
+
+    if (lesson.category === 'text') {
+      const alternatives = TEXT_ALTERNATIVES[lesson.id];
+      if (alternatives) {
+        return pickRandom(alternatives);
+      }
+      if (lesson.studiedKeys.length > 0) {
+        const keys = lesson.studiedKeys.filter(k => k !== ' ');
+        const sentenceCount = 2 + Math.floor(Math.random() * 2);
+        return Array.from({ length: sentenceCount }, () => {
+          const wordCount = 5 + Math.floor(Math.random() * 8);
+          return Array.from({ length: wordCount }, () => {
+            const wordLen = 2 + Math.floor(Math.random() * 5);
+            return Array.from({ length: wordLen }, () => pickRandom(keys)).join('');
+          }).join(' ');
+        }).join('. ') + '.';
+      }
+    }
+
+    return lesson.content;
+  };
+
+  const concludeAttempt = (
+    finalTypedInput?: string,
+    finalElapsedSeconds?: number,
+    finalCorrectCount?: number,
+    finalWrongCount?: number,
+    finalKeysHistory?: KeystrokeEvent[]
+  ) => {
     if (!activeLesson) return;
 
-    // Check benchmarks validation based on netWpm and grade
+    const input = finalTypedInput ?? typedInput;
+    const seconds = finalElapsedSeconds ?? elapsedSeconds;
+    const correct = finalCorrectCount ?? correctCharCount;
+    const wrong = finalWrongCount ?? wrongCharCount;
+    const history = finalKeysHistory ?? keysHistory;
+
+    const minutes = seconds / 60 || 0.01;
+    const grossWords = input.length / 5;
+    const finalGrossWpm = Math.round(grossWords / minutes);
+    const errorPenalties = wrong;
+    const finalNetWpm = Math.max(0, Math.round(((input.length - errorPenalties) / 5) / minutes));
+    const finalKpm = Math.round(input.length / minutes);
+    const totalStrikes = correct + wrong;
+    const finalAccuracy = totalStrikes > 0 ? Math.round((correct / totalStrikes) * 100) : 100;
+
     const gradeTarget = studentGrade === 4 ? 11 : studentGrade === 5 ? 22 : 33;
-    const isSuspicious = netWpm > 120 && accuracy === 100; // detect robotic keyboard injections
+    const isSuspicious = finalNetWpm > 120 && finalAccuracy === 100;
 
     const newAttempt: Attempt = {
       id: 'att-' + Math.random().toString(36).substr(2, 9),
@@ -180,19 +268,36 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
       classId,
       lessonId: activeLesson.id,
       lessonTitle: activeLesson.title,
-      grossWpm,
-      netWpm,
-      accuracy,
-      kpm,
-      timeSpent: elapsedSeconds,
+      grossWpm: finalGrossWpm,
+      netWpm: finalNetWpm,
+      accuracy: finalAccuracy,
+      kpm: finalKpm,
+      timeSpent: seconds,
       date: new Date().toISOString(),
-      keystrokeReplay: keysHistory,
+      keystrokeReplay: history,
       suspicious: isSuspicious
     };
 
     onNewAttempt(newAttempt);
-    alert(`¡Práctica de Dactilografía Completada! \nVisual: ${activeLesson.title}\nVelocidad Neta: ${netWpm} WPM\nPrecisión: ${accuracy}%`);
-    setActiveLesson(null);
+    const currentLesson = activeLesson;
+    const wantsToContinue = confirm(
+      `Práctica completada: ${currentLesson.title}\nVelocidad Neta: ${finalNetWpm} WPM · Precisión: ${finalAccuracy}%\n\n¿Quieres seguir practicando esta lección?`
+    );
+    if (wantsToContinue) {
+      const lessonAttempts = attempts.filter(a => a.lessonId === currentLesson.id).length + 1;
+      if (lessonAttempts >= 3) {
+        const wantNewText = confirm(
+          `Has practicado esta lección ${lessonAttempts} veces. ¿Quieres generar un texto nuevo para variar?`
+        );
+        if (wantNewText) {
+          startLesson({ ...currentLesson, content: generateVariantText(currentLesson) });
+          return;
+        }
+      }
+      startLesson(currentLesson);
+    } else {
+      setActiveLesson(null);
+    }
   };
 
   // Optimized Duration system early out checker
