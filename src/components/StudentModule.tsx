@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Keyboard, Award, Flame, Zap, Play, CheckCircle, RotateCcw, 
   HelpCircle, EyeOff, Sparkles, BookOpen, Clock, AlertCircle, Heart,
-  Settings, Layers, RefreshCw, FileText
+  Settings, RefreshCw, FileText
 } from 'lucide-react';
 import { Lesson, Attempt, KeyboardLayout, KeystrokeEvent } from '../types';
 import { getKeyAssignment, FINGER_METRIC, LAYOUT_ROWS } from '../keyboardLayouts';
@@ -16,7 +16,7 @@ interface StudentModuleProps {
 
 export default function StudentModule({ lessons, attempts, onNewAttempt }: StudentModuleProps) {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'lessons' | 'review' | 'meter' | 'race' | 'cert'>('lessons');
+  const [activeTab, setActiveTab] = useState<'lessons' | 'review' | 'race' | 'cert'>('lessons');
   
   // Custom states
   const [studentName, setStudentName] = useState('Mateo Fernández');
@@ -45,14 +45,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
   const [kpm, setKpm] = useState(0);
 
   // Custom Review state
-  const [reviewMode, setReviewMode] = useState<'difficult' | 'studied' | 'manual'>('difficult');
-  const [manualKeys, setManualKeys] = useState<string[]>([]);
-  const [customReviewText, setCustomReviewText] = useState('');
-
-  // TypingMeter Simulation
-  const [meterInputText, setMeterInputText] = useState('Borrador de Correo: Estimado docente, solicito la revision de mi examen de dactilografia ya que obtuve una mejora substancial en mi velocidad de escritura neta.');
-  const [meterTypedText, setMeterTypedText] = useState('');
-  const [meterWpm, setMeterWpm] = useState(0);
+  const [reviewMode, setReviewMode] = useState<'difficult' | 'studied'>('difficult');
 
   // Ergonomic breaks
   const [lastBreakTime, setLastBreakTime] = useState<number>(Date.now());
@@ -379,54 +372,27 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
         const keyIdx = Math.floor(Math.random() * keys.length);
         return keys[keyIdx] + keys[keyIdx] + ' ';
       }).join('').trim();
-    } else {
-      // Manual selection
-      if (manualKeys.length === 0) {
-        baseText = 'ffjj dd kk fjdk';
-      } else {
-        baseText = Array.from({ length: 15 }, () => {
-          const keyIdx = Math.floor(Math.random() * manualKeys.length);
-          return manualKeys[keyIdx] + manualKeys[keyIdx] + ' ';
-        }).join('').trim();
-      }
     }
 
-    setCustomReviewText(baseText);
+    const baseTextFinal = baseText;
     
     // Create simulated temporary Lesson and start custom drill
     const customLesson: Lesson = {
       id: 'custom-review',
       title: `Revisión Personalizada: ${reviewMode.toUpperCase()}`,
       category: 'word',
-      content: baseText,
+      content: baseTextFinal,
       targetWpm: 20,
       minDuration: 15,
-      studiedKeys: manualKeys
+      studiedKeys: []
     };
     
     startLesson(customLesson);
   };
 
-  const handleManualKeyToggle = (key: string) => {
-    setManualKeys(prev => {
-      if (prev.includes(key)) {
-        return prev.filter(k => k !== key);
-      }
-      if (prev.length >= 6) return prev; // max 6 keys
-      return [...prev, key];
-    });
-  };
 
-  // Background TypingMeter log ticker simulated
-  const simulateTypingMeterEntry = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setMeterTypedText(val);
 
-    // Speed calculation
-    const wordCount = val.length / 5;
-    const mockWpm = Math.round(wordCount * 12); // simulated metric scale
-    setMeterWpm(mockWpm);
-  };
+
 
   // Grade Benchmarks lookup
   const getGradeRating = (wpmVal: number) => {
@@ -523,12 +489,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
         >
           <RotateCcw className="w-3.5 h-3.5 inline mr-1.5" /> Práctica Inteligente
         </button>
-        <button
-          onClick={() => { setActiveTab('meter'); setActiveLesson(null); }}
-          className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all text-center whitespace-nowrap ${activeTab === 'meter' ? 'bg-indigo-600 text-white shadow shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/30'}`}
-        >
-          <Layers className="w-3.5 h-3.5 inline mr-1.5" /> TypingMeter Background
-        </button>
+
 
         <button
           onClick={() => { setActiveTab('race'); setActiveLesson(null); }}
@@ -1011,7 +972,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
             <p className="text-xs text-slate-400">Configura un módulo de práctica enfocado adaptativo basado en tus estadísticas históricas.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Option 1: Difficult Keys */}
             <div 
               onClick={() => setReviewMode('difficult')}
@@ -1029,37 +990,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
               <span className="text-xs font-bold block mb-1">📘 Studied Keys (Lección Actual)</span>
               <p className="text-[11px] text-slate-400">Práctica exclusiva basada únicamente en las teclas de la lección seleccionada.</p>
             </div>
-
-            {/* Option 3: Manual Selection */}
-            <div 
-              onClick={() => setReviewMode('manual')}
-              className={`p-5 rounded-2xl border cursor-pointer transition-all ${reviewMode === 'manual' ? 'bg-indigo-950/40 border-indigo-500 text-white shadow-lg shadow-indigo-550/5' : 'bg-slate-950/40 border-slate-850 hover:border-slate-700/60'}`}
-            >
-              <span className="text-xs font-bold block mb-1">⚙️ Selección Docente / Manual</span>
-              <p className="text-[11px] text-slate-400">Fuerza la ejercitación en un subconjunto de hasta 6 letras específicas.</p>
-            </div>
           </div>
-
-          {reviewMode === 'manual' && (
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-3">
-              <p className="text-xs text-slate-300 font-bold">Haz click en hasta 6 teclas para ejercitar:</p>
-              <div className="flex flex-wrap gap-1.5 justify-center">
-                {"abcdefghijklmnopqrstuvwxyz".split('').map(char => {
-                  const isSel = manualKeys.includes(char);
-                  return (
-                    <button
-                      key={char}
-                      onClick={() => handleManualKeyToggle(char)}
-                      className={`w-8 h-8 rounded border text-xs font-bold font-mono transition-all ${isSel ? 'bg-indigo-600 border-indigo-500 text-white scale-110' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
-                    >
-                      {char.toUpperCase()}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-[10px] text-slate-500 text-center font-mono">Teclas Seleccionadas ({manualKeys.length}/6): {manualKeys.join(', ').toUpperCase() || 'Ninguna'}</p>
-            </div>
-          )}
 
           <div className="flex justify-end mt-4">
             <button
@@ -1072,59 +1003,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
         </div>
       )}
 
-      {/* --- TAB 3: TYPING METER SIMULATION TRACKER --- */}
-      {activeTab === 'meter' && (
-        <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl text-left space-y-6 backdrop-blur-md shadow-xl">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-500/10 p-2.5 rounded-xl text-indigo-400 border border-indigo-500/25">
-              <Layers className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white tracking-tight">Módulo TypingMeter (Simulador en Segundo Plano)</h3>
-              <p className="text-xs text-slate-400">Simula el monitoreo de dactilografía mientras redactas correos o tareas externas.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <p className="text-xs text-slate-300 font-mono">Pega o escribe tu correo de prueba para medir tu rendimiento:</p>
-              
-              <textarea
-                value={meterTypedText}
-                onChange={simulateTypingMeterEntry}
-                rows={5}
-                className="w-full bg-slate-950/60 border border-slate-800/85 focus:border-indigo-500 rounded-xl p-3 focus:outline-none text-xs font-mono text-white leading-relaxed focus:ring-1 focus:ring-indigo-500/25 transition-all"
-                placeholder="Empieza a redactar aquí para medir tu ritmo..."
-              />
-            </div>
-
-            <div className="bg-slate-950/70 p-5 rounded-2xl border border-slate-850/80 flex flex-col justify-between shadow-inner">
-              <div>
-                <span className="text-[10px] text-indigo-400 font-mono tracking-widest block uppercase font-bold mb-1">MÉTRICAS DETECTADAS</span>
-                <p className="text-[11px] text-slate-400 leading-relaxed mb-4">El motor de segundo plano está analizando el flujo rítmico y la fatiga muscular virtual.</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 my-2">
-                <div className="bg-slate-900/50 p-3.5 rounded-xl border border-slate-800 text-center shadow-inner">
-                  <span className="text-[10px] text-slate-500 font-mono block">RITMO ESTIMADO</span>
-                  <span className="text-lg font-black text-indigo-400 font-mono mt-0.5 block">{meterWpm} WPM</span>
-                </div>
-
-                <div className="bg-slate-900/50 p-3.5 rounded-xl border border-slate-800 text-center shadow-inner">
-                  <span className="text-[10px] text-slate-500 font-mono block">CARGA COGNITIVA</span>
-                  <span className="text-lg font-black text-emerald-450 font-mono mt-0.5 block">Baja (-12%)</span>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-slate-500 leading-normal font-mono mt-3">
-                *La reducción de carga visual libera corteza cerebral prefrontal para concentrarte en el contenido de tus ensayos.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- TAB 4: MULTIPLAYER RACING TRACK (NITRO TYPE) --- */}
+      {/* --- TAB 3: MULTIPLAYER RACING TRACK (NITRO TYPE) --- */}
       {activeTab === 'race' && (
         <TypingRace />
       )}
