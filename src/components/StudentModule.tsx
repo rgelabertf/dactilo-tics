@@ -7,20 +7,20 @@ import {
 import { Lesson, Attempt, KeyboardLayout, KeystrokeEvent } from '../types';
 import { getKeyAssignment, FINGER_METRIC, LAYOUT_ROWS } from '../keyboardLayouts';
 import TypingRace from './TypingRace';
+import ProgressDashboard from './ProgressDashboard';
 
 interface StudentModuleProps {
   lessons: Lesson[];
   attempts: Attempt[];
   onNewAttempt: (attempt: Attempt) => void;
+  studentName: string;
 }
 
-export default function StudentModule({ lessons, attempts, onNewAttempt }: StudentModuleProps) {
+export default function StudentModule({ lessons, attempts, onNewAttempt, studentName }: StudentModuleProps) {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'lessons' | 'review' | 'race' | 'cert'>('lessons');
+  const [activeTab, setActiveTab] = useState<'lessons' | 'review' | 'dashboard' | 'race' | 'cert'>('lessons');
   
   // Custom states
-  const [studentName, setStudentName] = useState('Mateo Fernández');
-  const [studentGrade, setStudentGrade] = useState<number>(4);
 
   // Keyboard setup
   const [layout, setLayout] = useState<KeyboardLayout>('QWERTY');
@@ -248,13 +248,11 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
     const totalStrikes = correct + wrong;
     const finalAccuracy = totalStrikes > 0 ? Math.round((correct / totalStrikes) * 100) : 100;
 
-    const gradeTarget = studentGrade === 4 ? 11 : studentGrade === 5 ? 22 : 33;
     const isSuspicious = finalNetWpm > 120 && finalAccuracy === 100;
 
     const newAttempt: Attempt = {
       id: 'att-' + Math.random().toString(36).substr(2, 9),
       studentName,
-      studentGrade,
       lessonId: activeLesson.id,
       lessonTitle: activeLesson.title,
       grossWpm: finalGrossWpm,
@@ -270,7 +268,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
     onNewAttempt(newAttempt);
     const currentLesson = activeLesson;
     const wantsToContinue = confirm(
-      `Práctica completada: ${currentLesson.title}\nVelocidad Neta: ${finalNetWpm} WPM · Precisión: ${finalAccuracy}%\n\n¿Quieres seguir practicando esta lección?`
+      `Práctica completada: ${currentLesson.title}\nRendimiento: ${finalNetWpm} pal/min · Precisión: ${finalAccuracy}%\n\n¿Quieres seguir practicando esta lección?`
     );
     if (wantsToContinue) {
       const lessonAttempts = attempts.filter(a => a.lessonId === currentLesson.id).length + 1;
@@ -393,9 +391,9 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
   // Grade Benchmarks lookup
   const getGradeRating = (wpmVal: number) => {
     if (wpmVal >= 45) return { name: 'Leyenda del Teclado (Diamante)', color: 'text-indigo-400 bg-indigo-950/40 border-indigo-500' };
-    if (wpmVal >= 33) return { name: 'Nivel 6° Grado Excelente (Oro)', color: 'text-amber-500 bg-amber-950/40 border-amber-500' };
-    if (wpmVal >= 22) return { name: 'Nivel 5° Grado Fluido (Plata)', color: 'text-slate-300 bg-slate-900 border-slate-600' };
-    if (wpmVal >= 11) return { name: 'Nivel 4° Grado Inicial (Bronce)', color: 'text-amber-700 bg-amber-900/10 border-amber-800' };
+    if (wpmVal >= 33) return { name: 'Nivel Excelente (Oro)', color: 'text-amber-500 bg-amber-950/40 border-amber-500' };
+    if (wpmVal >= 22) return { name: 'Nivel Fluido (Plata)', color: 'text-slate-300 bg-slate-900 border-slate-600' };
+    if (wpmVal >= 11) return { name: 'Nivel Inicial (Bronce)', color: 'text-amber-700 bg-amber-900/10 border-amber-800' };
     return { name: 'Práctica Básica Activa', color: 'text-rose-400 bg-rose-950/20 border-rose-900' };
   };
 
@@ -420,8 +418,8 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
             <span className="bg-indigo-600/90 text-white rounded-lg px-2.5 py-0.5 text-[10px] font-mono font-black tracking-widest uppercase shadow">ESTUDIANTE</span>
             <h2 className="text-xl font-bold tracking-tight text-white">{studentName}</h2>
           </div>
-          <p className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
-            Grado: {studentGrade}° Primaria • Redacción • Colegio de Ciencias de la Computación
+          <p className="text-xs text-slate-400 font-mono">
+            Entrenamiento de digitación táctil
           </p>
         </div>
 
@@ -434,12 +432,12 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
           </div>
 
           <div className="bg-slate-850/50 border border-slate-750/60 rounded-xl p-2.5 px-4 text-center shadow-inner hover:bg-slate-800/80 transition-all min-w-[120px]">
-            <span className="text-[10px] text-slate-500 block font-mono font-bold uppercase mb-0.5">Velocidad Promedio</span>
+            <span className="text-[10px] text-slate-500 block font-mono font-bold uppercase mb-0.5">Rendimiento Promedio</span>
             <span className="text-lg font-black text-emerald-450 font-mono">
               {studentAttempts.length > 0
                 ? Math.round(studentAttempts.reduce((acc, curr) => acc + curr.netWpm, 0) / studentAttempts.length)
                 : 0
-              } <sub className="text-xs font-normal">WPM</sub>
+              } <sub className="text-xs font-normal">pal/min</sub>
             </span>
           </div>
 
@@ -485,7 +483,12 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
         >
           <RotateCcw className="w-3.5 h-3.5 inline mr-1.5" /> Práctica Inteligente
         </button>
-
+        <button
+          onClick={() => { setActiveTab('dashboard'); setActiveLesson(null); }}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all text-center whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/30'}`}
+        >
+          <Sparkles className="w-3.5 h-3.5 inline mr-1.5" /> Progreso
+        </button>
 
         <button
           onClick={() => { setActiveTab('race'); setActiveLesson(null); }}
@@ -513,7 +516,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
               <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/50 shadow-inner">
                 <div className="flex justify-between items-end mb-2">
                   <span className="text-3xl font-mono font-bold text-white italic">{netWpm}</span>
-                  <span className="text-[10px] text-indigo-400 font-bold uppercase font-sans tracking-wide">WPM NETO</span>
+                  <span className="text-[10px] text-indigo-400 font-bold uppercase font-sans tracking-wide">pal/min</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
                   <div 
@@ -521,7 +524,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                     style={{ width: `${Math.min(100, Math.max(5, (netWpm / activeLesson.targetWpm) * 100))}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-2 font-mono">Meta: {activeLesson.targetWpm} WPM (Grado {studentGrade})</p>
+                <p className="text-[10px] text-slate-500 mt-2 font-mono">Meta: {activeLesson.targetWpm} pal/min</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -640,12 +643,12 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
             {/* Micro details panel */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-slate-900/30 border border-slate-800 p-3.5 rounded-xl text-center">
-                <span className="text-[10px] text-slate-500 font-mono block uppercase">Velocidad Bruta</span>
-                <span className="text-xl font-bold text-slate-300 font-mono">{grossWpm} WPM</span>
+                <span className="text-[10px] text-slate-500 font-mono block uppercase">Rendimiento Bruto</span>
+                <span className="text-xl font-bold text-slate-300 font-mono">{grossWpm} pal/min</span>
               </div>
               <div className="bg-slate-900/30 border border-slate-800 p-3.5 rounded-xl text-center">
-                <span className="text-[10px] text-slate-500 font-mono block uppercase">Velocidad Neta</span>
-                <span className="text-xl font-bold text-indigo-400 font-mono">{netWpm} WPM</span>
+                <span className="text-[10px] text-slate-500 font-mono block uppercase">Rendimiento Neto</span>
+                <span className="text-xl font-bold text-indigo-400 font-mono">{netWpm} pal/min</span>
               </div>
               <div className="bg-slate-900/30 border border-slate-800 p-3.5 rounded-xl text-center">
                 <span className="text-[10px] text-slate-500 font-mono block uppercase">Precisión Real</span>
@@ -673,7 +676,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                   </span>
                 )}
                 {!canSkipEarly() && !forcesCompletion() && (
-                  <span className="font-mono">Tu objetivo es un mínimo de <b className="text-white font-bold">{activeLesson.targetWpm} WPM</b>. Sigue manteniendo la constancia y el ritmo continuo.</span>
+                  <span className="font-mono">Tu objetivo es un mínimo de <b className="text-white font-bold">{activeLesson.targetWpm} pal/min</b>. Sigue manteniendo la constancia y el ritmo continuo.</span>
                 )}
               </div>
 
@@ -894,7 +897,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                     <div key={l.id} className="bg-slate-900/60 hover:bg-slate-850 p-3.5 rounded-xl border border-slate-800/80 transition-all flex justify-between items-center group shadow-sm hover:border-indigo-500/20">
                       <div className="text-left">
                         <span className="text-xs font-bold text-white block truncate max-w-[130px]">{l.title}</span>
-                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} WPM</span>
+                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} pal/min</span>
                       </div>
                       <button
                         onClick={() => startLesson(l)}
@@ -918,7 +921,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                     <div key={l.id} className="bg-slate-900/60 hover:bg-slate-850 p-3.5 rounded-xl border border-slate-800/80 transition-all flex justify-between items-center group shadow-sm hover:border-indigo-500/20">
                       <div className="text-left">
                         <span className="text-xs font-bold text-white block truncate max-w-[130px]">{l.title}</span>
-                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} WPM</span>
+                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} pal/min</span>
                       </div>
                       <button
                         onClick={() => startLesson(l)}
@@ -942,7 +945,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                     <div key={l.id} className="bg-slate-900/60 hover:bg-slate-850 p-3.5 rounded-xl border border-slate-800/80 transition-all flex justify-between items-center group shadow-sm hover:border-indigo-500/20">
                       <div className="text-left">
                         <span className="text-xs font-bold text-white block truncate max-w-[130px]">{l.title}</span>
-                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} WPM</span>
+                        <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Meta: {l.targetWpm} pal/min</span>
                       </div>
                       <button
                         onClick={() => startLesson(l)}
@@ -954,7 +957,6 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                   ))}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -999,7 +1001,15 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
         </div>
       )}
 
-      {/* --- TAB 3: MULTIPLAYER RACING TRACK (NITRO TYPE) --- */}
+      {/* --- TAB DASHBOARD: STATISTICS & MEDALS --- */}
+      {activeTab === 'dashboard' && (
+        <ProgressDashboard 
+          attempts={attempts} 
+          studentName={studentName} 
+        />
+      )}
+
+      {/* --- TAB RACE: MULTIPLAYER RACING TRACK (NITRO TYPE) --- */}
       {activeTab === 'race' && (
         <TypingRace />
       )}
@@ -1037,7 +1047,7 @@ export default function StudentModule({ lessons, attempts, onNewAttempt }: Stude
                     {studentMaxWpm || 24}
                   </span>
                   <div className="text-left font-mono">
-                    <span className="text-xs text-white block font-bold tracking-tight">WPM NETOS</span>
+                    <span className="text-xs text-white block font-bold tracking-tight">pal/min</span>
                     <span className="text-[10px] text-slate-400 block mt-0.5">Precisión promedio: {studentAvgAccuracy}%</span>
                   </div>
                 </div>

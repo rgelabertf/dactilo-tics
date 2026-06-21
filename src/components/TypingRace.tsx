@@ -195,7 +195,7 @@ export default function TypingRace() {
                     <span className={isPlayer ? 'text-blue-400 font-bold' : ''}>
                       {r.avatar} {r.name} {r.place && <b className="text-yellow-400 opacity-90">({r.place}° Lugar)</b>}
                     </span>
-                    <span>{r.wpm} WPM</span>
+                    <span>{r.wpm} pal/min</span>
                   </div>
 
                   {/* Track Lane road */}
@@ -246,7 +246,7 @@ export default function TypingRace() {
               
               <div className="flex gap-4 justify-between text-xs text-slate-400 font-mono">
                 <span>Progreso: {Math.round((typedText.length / textToType.length) * 100)}%</span>
-                <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-blue-400 animate-pulse" /> Velocidad: {playerWpm} WPM</span>
+                <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-blue-400 animate-pulse" /> Velocidad: {playerWpm} pal/min</span>
               </div>
             </div>
           )}
@@ -264,7 +264,7 @@ export default function TypingRace() {
                       <span className="text-slate-400 font-bold w-4">{i + 1}.</span>
                       <span>{r.avatar} {r.name}</span>
                     </span>
-                    <span className="text-slate-300 font-bold">{r.wpm} WPM</span>
+                    <span className="text-slate-300 font-bold">{r.wpm} pal/min</span>
                   </div>
                 ))}
               </div>

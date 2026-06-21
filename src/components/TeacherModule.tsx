@@ -138,9 +138,9 @@ export default function TeacherModule({
     alert("¡Nueva lección curricular cargada exitosamente!");
   };
 
-  // Grade Benchmarks mapper check
-  const getBenchmarkStatus = (grade: number, netWpm: number) => {
-    const target = grade === 4 ? 11 : grade === 5 ? 22 : 33;
+  // Benchmark check with fixed target
+  const getBenchmarkStatus = (netWpm: number) => {
+    const target = 22;
     if (netWpm >= target) {
       return { status: 'SUPERADO', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
     }
@@ -150,7 +150,6 @@ export default function TeacherModule({
   // Unique students analytics calculation
   const uniqueStudentMap: Record<string, {
     name: string;
-    grade: number;
     attempts: number;
     avgSpeed: number;
     avgAccuracy: number;
@@ -160,7 +159,6 @@ export default function TeacherModule({
     if (!uniqueStudentMap[a.studentName]) {
       uniqueStudentMap[a.studentName] = {
         name: a.studentName,
-        grade: a.studentGrade,
         attempts: 0,
         avgSpeed: 0,
         avgAccuracy: 0
@@ -187,9 +185,9 @@ export default function TeacherModule({
 
     if (format === 'csv') {
       mimeType = 'text/csv';
-      dataStr = "Estudiante,Grado,Lección,Velocidad Bruta,Velocidad Neta,Precisión %,Fecha,Fraude\n";
+      dataStr = "Estudiante,Lección,Rendimiento Bruto,Rendimiento Neto,Precisión %,Fecha,Fraude\n";
       attempts.forEach(a => {
-        dataStr += `"${a.studentName}",${a.studentGrade},"${a.lessonTitle}",${a.grossWpm},${a.netWpm},${a.accuracy},"${a.date}",${a.suspicious ? 'SÍ' : 'NO'}\n`;
+        dataStr += `"${a.studentName}","${a.lessonTitle}",${a.grossWpm},${a.netWpm},${a.accuracy},"${a.date}",${a.suspicious ? 'SÍ' : 'NO'}\n`;
       });
     } else if (format === 'xml') {
       mimeType = 'text/xml';
@@ -197,8 +195,7 @@ export default function TeacherModule({
       attempts.forEach(a => {
         dataStr += `  <Intento id="${a.id}">\n`;
         dataStr += `    <Student>${a.studentName}</Student>\n`;
-        dataStr += `    <Grade>${a.studentGrade}</Grade>\n`;
-        dataStr += `    <Wpm>${a.netWpm}</Wpm>\n`;
+        dataStr += `    <Rendimiento>${a.netWpm}</Rendimiento>\n`;
         dataStr += `    <Accuracy>${a.accuracy}</Accuracy>\n`;
         dataStr += `    <Date>${a.date}</Date>\n`;
         dataStr += `    <RobotFlag>${a.suspicious}</RobotFlag>\n`;
@@ -210,9 +207,9 @@ export default function TeacherModule({
       dataStr = `<html><head><title>Mapeo Curricular Docente</title><style>body { font-family: sans-serif; padding: 24px; }</style></head>
       <body><h2>Mapeo Curricular de TICs - Resumen de Rendimiento</h2>
       <table border="1" cellpadding="8" cellspacing="0">
-        <tr style="background:#f1f5f9"><th>Estudiante</th><th>Grado</th><th>Lección</th><th>WPM Neta</th><th>Precisión %</th></tr>`;
+        <tr style="background:#f1f5f9"><th>Estudiante</th><th>Lección</th><th>Rendimiento</th><th>Precisión %</th></tr>`;
       attempts.forEach(a => {
-        dataStr += `<tr><td>${a.studentName}</td><td>${a.studentGrade}°</td><td>${a.lessonTitle}</td><td>${a.netWpm}</td><td>${a.accuracy}%</td></tr>`;
+        dataStr += `<tr><td>${a.studentName}</td><td>${a.lessonTitle}</td><td>${a.netWpm}</td><td>${a.accuracy}%</td></tr>`;
       });
       dataStr += `</table></body></html>`;
     }
@@ -282,7 +279,7 @@ export default function TeacherModule({
         <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-6 backdrop-blur-md shadow-xl">
           <div className="flex justify-between items-center border-b border-slate-850 pb-3">
             <h3 className="font-bold text-sm tracking-tight text-white">Nivelación y Mapeo de Estándares de Grado</h3>
-            <span className="text-[10px] text-slate-400 font-mono">Bases: 4° (11 WPM) • 5° (22 WPM) • 6° (33 WPM)</span>
+            
           </div>
 
           <div className="overflow-x-auto">
@@ -290,22 +287,20 @@ export default function TeacherModule({
               <thead className="bg-slate-950 text-slate-400 font-mono uppercase text-[10px]">
                 <tr>
                   <th className="p-3">Estudiante</th>
-                  <th className="p-3">Grado</th>
                   <th className="p-3">Intentos Totales</th>
-                  <th className="p-3">Velocidad Promedio</th>
+                  <th className="p-3">Rendimiento</th>
                   <th className="p-3">Precisión Promedio</th>
-                  <th className="p-3">Mapeo Pedagógico</th>
+                  <th className="p-3">Estatus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono">
                 {studentsList.map(s => {
-                  const benchmark = getBenchmarkStatus(s.grade, s.avgSpeed);
+                  const benchmark = getBenchmarkStatus(s.avgSpeed);
                   return (
                     <tr key={s.name} className="hover:bg-slate-850/40">
                       <td className="p-3 font-sans font-bold text-white">{s.name}</td>
-                      <td className="p-3">{s.grade}° Grado</td>
                       <td className="p-3">{s.attempts} escrituras</td>
-                      <td className="p-3 text-emerald-400 font-bold">{s.avgSpeed} Net WPM</td>
+                      <td className="p-3 text-emerald-400 font-bold">{s.avgSpeed} pal/min</td>
                       <td className="p-3 text-amber-400">{s.avgAccuracy}%</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full border text-[10px] font-black tracking-wide ${benchmark.color}`}>
@@ -347,7 +342,7 @@ export default function TeacherModule({
                   </div>
                   <span className="text-[11px] text-slate-400 block font-mono leading-tight">{a.lessonTitle}</span>
                   <div className="flex justify-between text-[10px] font-mono mt-2 text-slate-400">
-                    <span>{a.netWpm} WPM • {a.accuracy}%</span>
+                    <span>{a.netWpm} pal/min • {a.accuracy}%</span>
                     <span>{a.timeSpent}s</span>
                   </div>
                 </div>
@@ -495,7 +490,7 @@ export default function TeacherModule({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1 font-bold">Meta de Velocidad (WPM)</label>
+                  <label className="block text-slate-300 mb-1 font-bold">Meta (pal/min)</label>
                   <input
                     type="number"
                     className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500 text-white"
