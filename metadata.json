@@ -1,0 +1,6 @@
+{
+  "name": "Dactilografía TICs",
+  "description": "Aplicación adaptativa de dactilografía para estudiantes de TICs con analíticas de rendimiento, gamificación RPG y portal docente.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
